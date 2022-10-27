@@ -31,13 +31,6 @@ namespace MessageQueueProducerConsoleApp
 
             try
             {
-                channel.QueueDeclare(
-                    queue: strQueueName,
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null);
-
                 // Create the message
                 var message = new { Producer = "SimpleQueueProducer", Message = strMessage };
                 var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
@@ -75,6 +68,15 @@ namespace MessageQueueProducerConsoleApp
                 // Create a IModel channel to RabbitMQ
                 channel = this.CreateChannel("guest", "guest", "/", "localhost", 5672);
 
+                // Create queue
+                string strQueueName = "simple-message-queue";
+                channel.QueueDeclare(
+                    queue: strQueueName,
+                    durable: false,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
+
                 this.m_Ui.WriteLine($"Running SimpleQueueProducer... Sending {iNumberOfMessages} messages");
 
                 // Send iNumberOfMessages messages to RabbitMQ
@@ -83,7 +85,7 @@ namespace MessageQueueProducerConsoleApp
                 while (iCount < iNumberOfMessages)
                 {
                     // Send message
-                    this.SendMessage(channel, strMessage + " " + iCount, "simple-message-queue");
+                    this.SendMessage(channel, strMessage + " " + iCount, strQueueName);
                     iCount++;
 
                     Thread.Sleep(1000);

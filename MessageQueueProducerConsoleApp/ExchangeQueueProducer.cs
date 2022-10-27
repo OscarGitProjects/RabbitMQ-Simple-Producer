@@ -31,13 +31,6 @@ namespace MessageQueueProducerConsoleApp
 
             try
             {
-                channel.ExchangeDeclare(
-                    exchange:strExchangeName, 
-                    type:ExchangeType.Direct, 
-                    durable: false, 
-                    autoDelete: false, 
-                    arguments: null);
-
                 // Create the message
                 var message = new { Producer = "ExchangeQueueProducer", Message = strMessage };
                 var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
@@ -75,6 +68,22 @@ namespace MessageQueueProducerConsoleApp
                 // Create a IModel channel to RabbitMQ
                 channel = this.CreateChannel("guest", "guest", "/", "localhost", 5672);
 
+                // Create exchange
+                string strExchangeName = "direct-exchange";
+                string strQueueName = "direct-exchange-message-queue";
+
+                var timeToLive = new Dictionary<string, Object>
+                {
+                    { "x-message-ttl", 30000}
+                };
+
+                channel.ExchangeDeclare(
+                    exchange: strExchangeName,
+                    type: ExchangeType.Direct,
+                    durable: false,
+                    autoDelete: false,
+                    arguments: timeToLive);
+
                 this.m_Ui.WriteLine($"Running ExchangeQueueProducer... Sending {iNumberOfMessages} messages");
 
                 // Send iNumberOfMessages messages to RabbitMQ
@@ -83,7 +92,7 @@ namespace MessageQueueProducerConsoleApp
                 while (iCount < iNumberOfMessages)
                 {
                     // Send message
-                    this.SendMessage(channel, strMessage + " " + iCount, "direct-exchange-message-queue", "direct-exchange");
+                    this.SendMessage(channel, strMessage + " " + iCount, strQueueName, strExchangeName);
                     iCount++;
 
                     Thread.Sleep(1000);
