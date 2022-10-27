@@ -5,15 +5,15 @@ using System.Text;
 
 namespace MessageQueueProducerConsoleApp
 {
-    public class SimpleQueueProducer : BaseQueueProducer, IQueueProducer
+    public class ExchangeQueueProducer : BaseQueueProducer, IQueueProducer
     {
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="ui">Reference to user interface</param>
-        public SimpleQueueProducer(IUI ui) : base(ui)
-        {
-        }
+        public ExchangeQueueProducer(IUI ui) : base(ui)
+        { }
+
 
         /// <summary>
         /// Method sends a message to a queue in RabbitMQ
@@ -27,32 +27,32 @@ namespace MessageQueueProducerConsoleApp
         public void SendMessage(IModel channel, String strMessage, String strQueueName = "default-message-queue", String strExchangeName = "default-exchange")
         {
             if (channel == null)
-                throw new ArgumentNullException($"{nameof(SimpleQueueProducer)}->SendMessage(). Reference to IModel channel is null");
+                throw new ArgumentNullException($"{nameof(ExchangeQueueProducer)}->SendMessage(). Reference to IModel channel is null");
 
             try
             {
-                channel.QueueDeclare(
-                    queue: strQueueName,
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
+                channel.ExchangeDeclare(
+                    exchange:strExchangeName, 
+                    type:ExchangeType.Direct, 
+                    durable: false, 
+                    autoDelete: false, 
                     arguments: null);
 
                 // Create the message
-                var message = new { Producer = "SimpleQueueProducer", Message = strMessage };
+                var message = new { Producer = "ExchangeQueueProducer", Message = strMessage };
                 var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
 
                 channel.BasicPublish(
-                    exchange: "",
+                    exchange: strExchangeName,
                     routingKey: strQueueName,
                     basicProperties: null,
                     body: body);
 
-                this.m_Ui.WriteLine($"Sent simple message {message} to RabbitMQ");
+                this.m_Ui.WriteLine($"Sent direct exchange message {message} to RabbitMQ");
             }
             catch (Exception exc)
             {
-                this.m_Ui.WriteLine($"{nameof(SimpleQueueProducer)}->SendMessage() exception: " + exc.ToString());
+                this.m_Ui.WriteLine($"{nameof(ExchangeQueueProducer)}->SendMessage() exception: " + exc.ToString());
                 throw;
             }
         }
@@ -75,7 +75,7 @@ namespace MessageQueueProducerConsoleApp
                 // Create a IModel channel to RabbitMQ
                 channel = this.CreateChannel("guest", "guest", "/", "localhost", 5672);
 
-                this.m_Ui.WriteLine($"Running SimpleQueueProducer... Sending {iNumberOfMessages} messages");
+                this.m_Ui.WriteLine($"Running ExchangeQueueProducer... Sending {iNumberOfMessages} messages");
 
                 // Send iNumberOfMessages messages to RabbitMQ
                 int iCount = 0;
@@ -83,7 +83,7 @@ namespace MessageQueueProducerConsoleApp
                 while (iCount < iNumberOfMessages)
                 {
                     // Send message
-                    this.SendMessage(channel, strMessage + " " + iCount, "simple-message-queue");
+                    this.SendMessage(channel, strMessage + " " + iCount, "direct-exchange-message-queue", "direct-exchange");
                     iCount++;
 
                     Thread.Sleep(1000);
@@ -91,7 +91,7 @@ namespace MessageQueueProducerConsoleApp
             }
             catch (Exception exc)
             {
-                this.m_Ui.WriteLine("SimpleQueueProducer->Run() exception: " + exc.ToString());
+                this.m_Ui.WriteLine($"{nameof(ExchangeQueueProducer)}->Run() exception: " + exc.ToString());
                 throw;
             }
             finally
