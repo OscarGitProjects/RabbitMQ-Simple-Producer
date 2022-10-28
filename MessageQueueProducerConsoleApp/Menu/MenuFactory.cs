@@ -29,6 +29,7 @@ namespace MessageQueueProducerConsoleApp.Menu
                     strBuilder.AppendLine("0. Exit program");
                     strBuilder.AppendLine("1. Send Simple messages");
                     strBuilder.AppendLine("2. Send Direct Exchange messages");
+                    strBuilder.AppendLine("3. Send Topic Exchange messages");
                     strMenu = strBuilder.ToString();
                     break;
                 default:

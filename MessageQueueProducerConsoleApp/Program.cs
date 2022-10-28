@@ -61,6 +61,14 @@ namespace MessageQueueProducerConsoleApp
                             ui.WriteLine("Press a key to continue");
                             ui.ReadLine();
                         }
+                        else if (strInput.Equals("3"))
+                        {
+                            producer = new TopicExchangeQueueProducer(ui);
+                            producer.Run("Hello mate", 25);
+
+                            ui.WriteLine("Press a key to continue");
+                            ui.ReadLine();
+                        }
                     }
 
 

@@ -5,6 +5,10 @@ using System.Text;
 
 namespace MessageQueueProducerConsoleApp
 {
+    /// <summary>
+    /// Direct exchange. Uses routing key in the header to identify which queue the message should be sent to. 
+    /// Routing key is a header value set by the producer, and a consumer uses the routing key to bind to the queue. 
+    /// The exchange does exact match of the routing key values
     public class ExchangeQueueProducer : BaseQueueProducer, IQueueProducer
     {
         /// <summary>
@@ -22,9 +26,10 @@ namespace MessageQueueProducerConsoleApp
         /// <param name="strMessage">Message</param>
         /// <param name="strQueueName">Name of queue</param>
         /// <param name="strExchangeName">Name of the exchange</param>
+        /// <param name="strRoutingKey">Routing key</param>
         /// <exception cref="ArgumentNullException">Throws if reference to IModel channel is null</exception>
         /// <exception cref="Exception">Throws exception</exception>
-        public void SendMessage(IModel channel, String strMessage, String strQueueName = "default-message-queue", String strExchangeName = "default-exchange")
+        public void SendMessage(IModel channel, String strMessage, String strQueueName = "default-message-queue", String strExchangeName = "default-exchange", String strRoutingKey="acount.init")
         {
             if (channel == null)
                 throw new ArgumentNullException($"{nameof(ExchangeQueueProducer)}->SendMessage(). Reference to IModel channel is null");
@@ -37,7 +42,7 @@ namespace MessageQueueProducerConsoleApp
 
                 channel.BasicPublish(
                     exchange: strExchangeName,
-                    routingKey: strQueueName,
+                    routingKey: strRoutingKey,
                     basicProperties: null,
                     body: body);
 
@@ -71,6 +76,7 @@ namespace MessageQueueProducerConsoleApp
                 // Create exchange
                 string strExchangeName = "direct-exchange";
                 string strQueueName = "direct-exchange-message-queue";
+                string strRoutingKey = "acount.init";
 
                 var timeToLive = new Dictionary<string, Object>
                 {
@@ -92,7 +98,7 @@ namespace MessageQueueProducerConsoleApp
                 while (iCount < iNumberOfMessages)
                 {
                     // Send message
-                    this.SendMessage(channel, strMessage + " " + iCount, strQueueName, strExchangeName);
+                    this.SendMessage(channel, strMessage + " " + iCount, strQueueName, strExchangeName, strRoutingKey);
                     iCount++;
 
                     Thread.Sleep(1000);
@@ -105,8 +111,7 @@ namespace MessageQueueProducerConsoleApp
             }
             finally
             {
-                if (channel != null)
-                    channel.Close();
+                channel?.Close();
             }
         }
     }

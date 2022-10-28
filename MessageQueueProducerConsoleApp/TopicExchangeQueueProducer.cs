@@ -5,15 +5,19 @@ using System.Text;
 
 namespace MessageQueueProducerConsoleApp
 {
-    public class SimpleQueueProducer : BaseQueueProducer, IQueueProducer
+    /// <summary>
+    /// Topic exchange uses routing key, but it does not do an exact match on the routing key. 
+    /// Instead it does a patterna match based on the pattern
+    /// </summary>
+    public class TopicExchangeQueueProducer : BaseQueueProducer, IQueueProducer
     {
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="ui">Reference to user interface</param>
-        public SimpleQueueProducer(IUI ui) : base(ui)
-        {
-        }
+        public TopicExchangeQueueProducer(IUI ui) : base(ui)
+        {}
+
 
         /// <summary>
         /// Method sends a message to a queue in RabbitMQ
@@ -25,28 +29,28 @@ namespace MessageQueueProducerConsoleApp
         /// <param name="strRoutingKey">Routing key</param>
         /// <exception cref="ArgumentNullException">Throws if reference to IModel channel is null</exception>
         /// <exception cref="Exception">Throws exception</exception>
-        public void SendMessage(IModel channel, String strMessage, String strQueueName = "default-message-queue", String strExchangeName = "default-exchange", String strRoutingKey = "acount.init")
+        public void SendMessage(IModel channel, string strMessage, string strQueueName = "default-message-queue", string strExchangeName = "default-exchange", string strRoutingKey = "acount.init")
         {
             if (channel == null)
-                throw new ArgumentNullException($"{nameof(SimpleQueueProducer)}->SendMessage(). Reference to IModel channel is null");
+                throw new ArgumentNullException($"{nameof(TopicExchangeQueueProducer)}->SendMessage(). Reference to IModel channel is null");
 
             try
             {
                 // Create the message
-                var message = new { Producer = "SimpleQueueProducer", Message = strMessage };
+                var message = new { Producer = "TopicExchangeQueueProducer", Message = strMessage };
                 var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
 
                 channel.BasicPublish(
-                    exchange: "",
-                    routingKey: strQueueName,
+                    exchange: strExchangeName,
+                    routingKey: strRoutingKey,
                     basicProperties: null,
                     body: body);
 
-                this.m_Ui.WriteLine($"Sent simple message {message} to RabbitMQ");
+                this.m_Ui.WriteLine($"Sent topic exchange message {message} to RabbitMQ");
             }
             catch (Exception exc)
             {
-                this.m_Ui.WriteLine($"{nameof(SimpleQueueProducer)}->SendMessage() exception: " + exc.ToString());
+                this.m_Ui.WriteLine($"{nameof(TopicExchangeQueueProducer)}->SendMessage() exception: " + exc.ToString());
                 throw;
             }
         }
@@ -64,21 +68,27 @@ namespace MessageQueueProducerConsoleApp
 
             try
             {
-                //SimpleQueueProducer producer = new SimpleQueueProducer();
-
                 // Create a IModel channel to RabbitMQ
                 channel = this.CreateChannel("guest", "guest", "/", "localhost", 5672);
 
-                // Create queue
-                string strQueueName = "simple-message-queue";
-                channel.QueueDeclare(
-                    queue: strQueueName,
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null);
+                // Create exchange
+                string strExchangeName = "topic-exchange";
+                string strQueueName = "topic-exchange-message-queue";
+                string strRoutingKey = "acount.default";
 
-                this.m_Ui.WriteLine($"Running SimpleQueueProducer... Sending {iNumberOfMessages} messages");
+                var timeToLive = new Dictionary<string, Object>
+                {
+                    { "x-message-ttl", 30000}
+                };
+
+                channel.ExchangeDeclare(
+                    exchange: strExchangeName,
+                    type: ExchangeType.Topic,
+                    durable: false,
+                    autoDelete: false,
+                    arguments: timeToLive);
+
+                this.m_Ui.WriteLine($"Running TopicExchangeQueueProducer... Sending {iNumberOfMessages} messages");
 
                 // Send iNumberOfMessages messages to RabbitMQ
                 int iCount = 0;
@@ -86,7 +96,7 @@ namespace MessageQueueProducerConsoleApp
                 while (iCount < iNumberOfMessages)
                 {
                     // Send message
-                    this.SendMessage(channel, strMessage + " " + iCount, strQueueName);
+                    this.SendMessage(channel, strMessage + " " + iCount, strQueueName, strExchangeName, strRoutingKey);
                     iCount++;
 
                     Thread.Sleep(1000);
@@ -94,7 +104,7 @@ namespace MessageQueueProducerConsoleApp
             }
             catch (Exception exc)
             {
-                this.m_Ui.WriteLine("SimpleQueueProducer->Run() exception: " + exc.ToString());
+                this.m_Ui.WriteLine($"{nameof(TopicExchangeQueueProducer)}->Run() exception: " + exc.ToString());
                 throw;
             }
             finally
