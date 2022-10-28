@@ -24,12 +24,13 @@ namespace MessageQueueProducerConsoleApp.Menu
             switch(menuType)
             {
                 case MenuType.Main_Menu:
-                    strBuilder.AppendLine("Main menu");
+                    strBuilder.AppendLine("Main menu for the messages producer");
                     strBuilder.AppendLine("Select number for desired function");
                     strBuilder.AppendLine("0. Exit program");
                     strBuilder.AppendLine("1. Send Simple messages");
                     strBuilder.AppendLine("2. Send Direct Exchange messages");
                     strBuilder.AppendLine("3. Send Topic Exchange messages");
+                    strBuilder.AppendLine("4. Send Header Exchange messages");
                     strMenu = strBuilder.ToString();
                     break;
                 default:
