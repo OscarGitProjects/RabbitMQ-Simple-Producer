@@ -31,6 +31,7 @@ namespace MessageQueueProducerConsoleApp.Menu
                     strBuilder.AppendLine("2. Send Direct Exchange messages");
                     strBuilder.AppendLine("3. Send Topic Exchange messages");
                     strBuilder.AppendLine("4. Send Header Exchange messages");
+                    strBuilder.AppendLine("5. Send Fanout Exchange messages");
                     strMenu = strBuilder.ToString();
                     break;
                 default:

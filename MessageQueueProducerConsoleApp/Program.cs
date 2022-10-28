@@ -77,6 +77,14 @@ namespace MessageQueueProducerConsoleApp
                             ui.WriteLine("Press a key to continue");
                             ui.ReadLine();
                         }
+                        else if (strInput.Equals("5"))
+                        {
+                            producer = new FanoutExchangeQueueProducer(ui);
+                            producer.Run("Hello mate", 25);
+
+                            ui.WriteLine("Press a key to continue");
+                            ui.ReadLine();
+                        }
                     }
                 }
                 while (true);
